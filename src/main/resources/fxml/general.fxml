@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.GeneralController">
+   <children>
+      <Button fx:id="registrar" layoutX="207.0" layoutY="151.0" mnemonicParsing="false" onAction="#registrarMov" text="Registrar Movimiento Inventario" />
+      <Button fx:id="suplidores" layoutX="264.0" layoutY="200.0" mnemonicParsing="false" onAction="#suplidor" text="Suplidores" />
+      <Button fx:id="generarOrden" layoutX="198.0" layoutY="97.0" mnemonicParsing="false" onAction="#compraAutomatica" text="Generar Orden Compra Automatica" />
+   </children>
+</AnchorPane>
