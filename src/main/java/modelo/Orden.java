@@ -2,6 +2,7 @@ package modelo;
 
 import lombok.Data;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -11,12 +12,14 @@ import java.util.List;
 public class Orden {
     String codigoSuplidor;
     Double montoTotal;
+    Date fecPedir;
     List<Articulos> articulos;
 
-    public Orden(String codigoSuplidor, Double montoTotal, List<Articulos> articulos) {
+    public Orden(String codigoSuplidor, Double montoTotal, List<Articulos> articulos, Date fecPedir) {
         this.codigoSuplidor = codigoSuplidor;
         this.montoTotal = montoTotal;
         this.articulos = articulos;
+        this.fecPedir = fecPedir;
     }
 
     public Orden() {

@@ -30,6 +30,9 @@ public class CompraController {
     List<TablaCompra> objetivo = new ArrayList<>();
     List<modelo.Articulo> todosArticulos = new ArrayList<>();
 
+    Date fech1 = null;
+    Date fech2 = null;
+    Date fech3 = null;
 
     //Estableciendo conexion con la base de datos
     MongoClient mongoClient = new MongoClient("localhost",27017);
@@ -223,15 +226,10 @@ public class CompraController {
 
         ));
 
-        Date fech1;
-        Date fech2;
-        Date fech3;
+
 
         int trap = 0;
 
-        int fin1;
-        int fin2;
-        int fin3;
 
         Double menor1 = -1.0;
         Double menor2 = -1.0;
@@ -239,71 +237,183 @@ public class CompraController {
 
         for(Document as : movimient){
             Document artis = (Document) as.get("_id");
-            System.out.println("Articulo: " + artis.get("codigoArticulo"));
-            System.out.println("Cantidad total: " + as.get("cantidad"));
-            System.out.println("Total de salidas: " + as.get("count"));
+//            System.out.println("Articulo: " + artis.get("codigoArticulo"));
+//            System.out.println("Cantidad total: " + as.get("cantidad"));
+//            System.out.println("Total de salidas: " + as.get("count"));
             trap++;
 
             if(estos1.size() > 0){
-                for(int uno = 0; uno < estos1.size(); uno++){
-                    if(artis.get("codigoArticulo").equals(estos1.get(uno).getCodigoArticulo())){
-                        Double consumo = Math.floor((Double) as.get("cantidad")/(Double) as.get("count"));
-                        System.out.println("\nconsumo para "+ artis.get("codigoArticulo")+": " + String.valueOf(consumo)+"\n");
+                if(orden1 != null && orden1.getFecPedir() != null && fech1 == null)
+                    fech1 = orden1.getFecPedir();
 
-                        Double diasFaltantes = Math.floor(estos1.get(uno).getCantExist()/consumo);
-
-                        if(uno == 0){
-                            menor1 = diasFaltantes;
-                        }else {
-                            if(menor1 > diasFaltantes){
-                                menor1 = diasFaltantes;
-                            }
-                        }
-
-                        if((menor1 - estos1.get(uno).getDiasSupli()) > 0){
-                            //TODO: A partir de aqui sacar fecha que debe de pedir, entrarla a la orden, guardarla y presentarla. Repetir para las demas listas de articulos
-                        }
-                    }
-                }
-
-
-
+                orden1 = crearOrden("2001",total1,estos1,as,artis,menor1,fech1);
             }
 
+            if(estos2.size()>0){
+                if(orden2 != null && orden2.getFecPedir() != null && fech2 == null)
+                    fech2 = orden2.getFecPedir();
 
+                orden2 = crearOrden("2002",total2,estos2,as,artis,menor2,fech2);
+            }
+
+            if(estos3.size()>0){
+                if(orden3 != null && orden3.getFecPedir() != null && fech3 == null)
+                    fech3 = orden3.getFecPedir();
+
+                orden3 = crearOrden("2003",total3,estos3,as,artis,menor3,fech3);
+            }
 
         }
-        System.out.println("\nCantidad total de todo: " + String.valueOf(trap));
-
-
-
-
-
-
-        orden1 = new Orden("2001",total1,estos1);
-
-        orden2 = new Orden("2002",total2,estos2);
-
-        orden3 = new Orden("2003",total3,estos3);
-
-
+        System.out.println("\nCantidad total de articulos procesados: " + String.valueOf(trap));
 
         Document ordenCompra = new Document();
-        Document articuloOrden = new Document();
+
+        List<Document> artiss = new ArrayList<>();
+        Map<String,Object> neet = new HashMap<>();
 
         Document ordenesMongo = database.getCollection("OrdenCompra").find().sort(new BasicDBObject("codigoOrdenCompra",-1)).first();
 
-        System.out.println(orden1.getArticulos().get(orden1.getArticulos().size()-1));
+        MongoCollection<Document> OrdenCompraMongo = database.getCollection("OrdenCompra");
 
-//        if(ordenesMongo == null){
-//            ordenCompra.append("codigoOrdenCompra",1);
-//        }else{
-//            System.out.println(ordenesMongo);
-//        }
-//
-//        if(orden1.getMontoTotal()>0){
-//            ordenCompra.append("codigoSuplidor","2001").append("fechaOrden",orden1.getArticulos().get());
-//        }
+        if(orden1 != null){
+            if(ordenesMongo == null){
+                ordenCompra.append("codigoOrdenCompra",1);
+            }else{
+                System.out.println(ordenesMongo.get("codigoOrdenCompra"));
+                ordenCompra.append("codigoOrdenCompra",(int)ordenesMongo.get("codigoOrdenCompra")+1);
+            }
+
+            for(Articulos arts : orden1.getArticulos()){
+                neet.put("codigoArticulo",arts.getCodigoArticulo());
+                neet.put("cantidadOrdenada",arts.getCantidadOrdenada());
+                neet.put("precioCompra",arts.getPrecioCompra());
+                Document nuevo = new Document(neet);
+                artiss.add(nuevo);
+            }
+
+            ordenCompra.append("codigoSuplidor","2001")
+                    .append("fechaOrden",orden1.getFecPedir())
+                    .append("montoTotal",orden1.getMontoTotal())
+                    .append("articulos",artiss);
+
+
+
+            OrdenCompraMongo.insertOne(ordenCompra);
+        }
+
+        ordenCompra = new Document();
+
+        artiss = new ArrayList<>();
+        neet = new HashMap<>();
+
+        ordenesMongo = database.getCollection("OrdenCompra").find().sort(new BasicDBObject("codigoOrdenCompra",-1)).first();
+
+        OrdenCompraMongo = database.getCollection("OrdenCompra");
+
+        if(orden2 != null){
+            if(ordenesMongo == null){
+                ordenCompra.append("codigoOrdenCompra",1);
+            }else{
+                System.out.println(ordenesMongo.get("codigoOrdenCompra"));
+                ordenCompra.append("codigoOrdenCompra",(int)ordenesMongo.get("codigoOrdenCompra")+1);
+            }
+
+            for(Articulos arts : orden2.getArticulos()){
+                neet.put("codigoArticulo",arts.getCodigoArticulo());
+                neet.put("cantidadOrdenada",arts.getCantidadOrdenada());
+                neet.put("precioCompra",arts.getPrecioCompra());
+                Document nuevo = new Document(neet);
+                artiss.add(nuevo);
+            }
+
+            ordenCompra.append("codigoSuplidor","2002")
+                    .append("fechaOrden",orden1.getFecPedir())
+                    .append("montoTotal",orden1.getMontoTotal())
+                    .append("articulos",artiss);
+
+
+
+            OrdenCompraMongo.insertOne(ordenCompra);
+        }
+
+        ordenCompra = new Document();
+
+        artiss = new ArrayList<>();
+        neet = new HashMap<>();
+
+        ordenesMongo = database.getCollection("OrdenCompra").find().sort(new BasicDBObject("codigoOrdenCompra",-1)).first();
+
+        OrdenCompraMongo = database.getCollection("OrdenCompra");
+
+        if(orden3 != null){
+            if(ordenesMongo == null){
+                ordenCompra.append("codigoOrdenCompra",1);
+            }else{
+                System.out.println(ordenesMongo.get("codigoOrdenCompra"));
+                ordenCompra.append("codigoOrdenCompra",(int)ordenesMongo.get("codigoOrdenCompra")+1);
+            }
+
+            for(Articulos arts : orden3.getArticulos()){
+                neet.put("codigoArticulo",arts.getCodigoArticulo());
+                neet.put("cantidadOrdenada",arts.getCantidadOrdenada());
+                neet.put("precioCompra",arts.getPrecioCompra());
+                Document nuevo = new Document(neet);
+                artiss.add(nuevo);
+            }
+
+            ordenCompra.append("codigoSuplidor","2003")
+                    .append("fechaOrden",orden1.getFecPedir())
+                    .append("montoTotal",orden1.getMontoTotal())
+                    .append("articulos",artiss);
+
+
+
+            OrdenCompraMongo.insertOne(ordenCompra);
+        }
+
+    }
+
+
+    public Orden crearOrden(String suplidor,Double total,List<Articulos> estos1,Document as, Document artis, Double menor, Date fech){
+
+        for(int uno = 0; uno < estos1.size(); uno++){
+            if(artis.get("codigoArticulo").equals(estos1.get(uno).getCodigoArticulo())){
+                Double consumo = Math.floor((Double) as.get("cantidad")/Double.parseDouble(as.get("count").toString()));
+                System.out.println("\nconsumo para "+ artis.get("codigoArticulo")+": " + String.valueOf(consumo)+"\n");
+
+                Double diasFaltantes = Math.floor(estos1.get(uno).getCantExist()/consumo);
+
+                if(uno == 0){
+                    menor = diasFaltantes;
+                }else {
+                    if(menor > diasFaltantes){
+                        menor = diasFaltantes;
+                    }
+                }
+
+                if((menor - estos1.get(uno).getDiasSupli()) > 0){
+                    //TODO: A partir de aqui sacar fecha que debe de pedir, entrarla a la orden, guardarla y presentarla. Repetir para las demas listas de articulos
+                    Double diaPorPedir = menor - estos1.get(uno).getDiasSupli();
+                    System.out.println("Dia que ha que pedir: " + diaPorPedir);
+
+                    Date dt = new Date();
+                    Calendar c = Calendar.getInstance();
+                    c.setTime(dt);
+                    c.add(Calendar.DATE,diaPorPedir.intValue());
+                    dt = c.getTime();
+
+                    fech = dt;
+
+                    System.out.println("Fecha a pedir: " + dt + "\n");
+                }else {
+                    fech = new Date();
+                    System.out.println("Pedir hoy!!!" + "\n");
+                }
+            }
+        }
+
+
+        return new Orden(suplidor,total,estos1,fech);
     }
 
 }
