@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="388.0" prefWidth="495.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.CompraController">
+<AnchorPane prefHeight="625.0" prefWidth="495.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.CompraController">
    <children>
       <ComboBox fx:id="artCB" layoutX="14.0" layoutY="97.0" prefHeight="25.0" prefWidth="211.0" />
       <Label layoutX="14.0" layoutY="73.0" text="Seleccione el articulo deseado:">
@@ -39,5 +39,11 @@
         </columns>
       </TableView>
       <Button layoutX="384.0" layoutY="350.0" mnemonicParsing="false" onAction="#generar" text="Generar Orden" />
+      <TableView fx:id="tCompra2" layoutX="16.0" layoutY="395.0" prefHeight="200.0" prefWidth="462.0">
+         <columns>
+            <TableColumn fx:id="clSuplir" prefWidth="187.0" text="Suplidor" />
+            <TableColumn fx:id="clFec2" prefWidth="274.0" text="Fecha para Pedir" />
+         </columns>
+      </TableView>
    </children>
 </AnchorPane>

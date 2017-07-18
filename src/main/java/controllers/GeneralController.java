@@ -21,7 +21,7 @@ public class GeneralController {
     Button generarOrden,registrar,suplidores;
 
     private Main mainApp;
-    public static Stage window = new Stage();
+    public Stage window = new Stage();
 
     public void setMainApp(Main mainApp){
         this.mainApp = mainApp;
@@ -36,9 +36,6 @@ public class GeneralController {
         seleccion("/fxml/registrar.fxml","reg");
     }
 
-    public void suplidor(){
-        seleccion("/fxml/suplidor.fxml","sup");
-    }
 
 
     public void seleccion(String ruta,String elect){
@@ -58,9 +55,6 @@ public class GeneralController {
             }else if (elect.equals("reg")){
                 RegistrarController rc = new RegistrarController();
                 rc.inicializarApp();
-            }else if(elect.equals("sup")){
-                SuplidorController sc = new SuplidorController();
-                sc.inicializarApp();
             }
 
             window.showAndWait();

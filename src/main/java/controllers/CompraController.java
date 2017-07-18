@@ -27,6 +27,8 @@ import static com.mongodb.client.model.Filters.eq;
 public class CompraController {
     CompraController cc;
     ObservableList<TablaCompra> data = FXCollections.observableArrayList();
+    ObservableList<VerOrden> data1 = FXCollections.observableArrayList();
+
     List<TablaCompra> objetivo = new ArrayList<>();
     List<modelo.Articulo> todosArticulos = new ArrayList<>();
 
@@ -53,10 +55,10 @@ public class CompraController {
     DatePicker fecDP;
 
     @FXML
-    TableColumn <TablaCompra, String> clCod,clArt,clCantidad,clFec;
+    TableColumn <TablaCompra, String> clArt,clCantidad,clFec,clSuplir,clFec2;
 
     @FXML
-    TableView tCompra;
+    TableView tCompra,tCompra2;
 
     @FXML
     public void initialize(){
@@ -66,6 +68,8 @@ public class CompraController {
         clArt.setCellValueFactory( new PropertyValueFactory<>("articulo"));
         clCantidad.setCellValueFactory( new PropertyValueFactory<>("cantidad"));
         clFec.setCellValueFactory( new PropertyValueFactory<>("fecDeseada"));
+        clSuplir.setCellValueFactory( new PropertyValueFactory<>("supli"));
+        clFec2.setCellValueFactory( new PropertyValueFactory<>("fecha"));
 
         Double totalCantidad = 0.0;
 
@@ -75,7 +79,6 @@ public class CompraController {
                 totalCantidad += c.getDouble("balanceActual");
             }
 
-            System.out.println(d);
             todosArticulos.add(new Articulo((Double)d.get("codigoArticulo"),d.get("descripcion").toString(),totalCantidad));
             opciones.add(d.get("descripcion").toString());
             totalCantidad = 0.0;
@@ -142,7 +145,7 @@ public class CompraController {
                     System.out.println("Cantidad total del articulo: "+ todosArticulos.get(k).getCantidadTotal().toString());
 
                     if(todosArticulos.get(k).getCantidadTotal() >= Double.parseDouble(cantTF.getText())){
-                        System.out.println("No es necesario, ya existe esa cantidad");
+                        System.out.println("No es necesario, ya existe esa cantidad para el Articulo: " + todosArticulos.get(k).getDescripcion());
                     }else{
 
                         //conseguir el mejor suplidor y en cuantos dias
@@ -264,7 +267,7 @@ public class CompraController {
             }
 
         }
-        System.out.println("\nCantidad total de articulos procesados: " + String.valueOf(trap));
+        System.out.println("Cantidad total de articulos procesados: " + String.valueOf(trap));
 
         Document ordenCompra = new Document();
 
@@ -275,11 +278,13 @@ public class CompraController {
 
         MongoCollection<Document> OrdenCompraMongo = database.getCollection("OrdenCompra");
 
+        VerOrden ver = null;
+
         if(orden1 != null){
             if(ordenesMongo == null){
                 ordenCompra.append("codigoOrdenCompra",1);
             }else{
-                System.out.println(ordenesMongo.get("codigoOrdenCompra"));
+                System.out.println("Orden1 de compra generada #"+ordenesMongo.get("codigoOrdenCompra"));
                 ordenCompra.append("codigoOrdenCompra",(int)ordenesMongo.get("codigoOrdenCompra")+1);
             }
 
@@ -299,6 +304,8 @@ public class CompraController {
 
 
             OrdenCompraMongo.insertOne(ordenCompra);
+
+            ver = new VerOrden(orden1.getCodigoSuplidor(),orden1.getFecPedir());
         }
 
         ordenCompra = new Document();
@@ -310,11 +317,13 @@ public class CompraController {
 
         OrdenCompraMongo = database.getCollection("OrdenCompra");
 
+        VerOrden ver2 = null;
+
         if(orden2 != null){
             if(ordenesMongo == null){
                 ordenCompra.append("codigoOrdenCompra",1);
             }else{
-                System.out.println(ordenesMongo.get("codigoOrdenCompra"));
+                System.out.println("Orden2 de compra generada #"+ordenesMongo.get("codigoOrdenCompra"));
                 ordenCompra.append("codigoOrdenCompra",(int)ordenesMongo.get("codigoOrdenCompra")+1);
             }
 
@@ -334,6 +343,8 @@ public class CompraController {
 
 
             OrdenCompraMongo.insertOne(ordenCompra);
+
+            ver2 = new VerOrden(orden2.getCodigoSuplidor(),orden2.getFecPedir());
         }
 
         ordenCompra = new Document();
@@ -345,11 +356,13 @@ public class CompraController {
 
         OrdenCompraMongo = database.getCollection("OrdenCompra");
 
+        VerOrden ver3 = null;
+
         if(orden3 != null){
             if(ordenesMongo == null){
                 ordenCompra.append("codigoOrdenCompra",1);
             }else{
-                System.out.println(ordenesMongo.get("codigoOrdenCompra"));
+                System.out.println("Orden3 de compra generada #"+ordenesMongo.get("codigoOrdenCompra"));
                 ordenCompra.append("codigoOrdenCompra",(int)ordenesMongo.get("codigoOrdenCompra")+1);
             }
 
@@ -369,6 +382,21 @@ public class CompraController {
 
 
             OrdenCompraMongo.insertOne(ordenCompra);
+            ver3 = new VerOrden(orden3.getCodigoSuplidor(),orden3.getFecPedir());
+        }
+
+        if(ver != null){
+            data1.add(ver);
+        }
+        if(ver2 != null){
+            data1.add(ver2);
+        }
+        if (ver3 != null){
+            data1.add(ver3);
+        }
+
+        if(data1 != null){
+            tCompra2.setItems(data1);
         }
 
     }
@@ -379,7 +407,7 @@ public class CompraController {
         for(int uno = 0; uno < estos1.size(); uno++){
             if(artis.get("codigoArticulo").equals(estos1.get(uno).getCodigoArticulo())){
                 Double consumo = Math.floor((Double) as.get("cantidad")/Double.parseDouble(as.get("count").toString()));
-                System.out.println("\nconsumo para "+ artis.get("codigoArticulo")+": " + String.valueOf(consumo)+"\n");
+                System.out.println("Consumo para articulo: "+ artis.get("codigoArticulo")+": " + String.valueOf(consumo)+"\n");
 
                 Double diasFaltantes = Math.floor(estos1.get(uno).getCantExist()/consumo);
 
@@ -392,9 +420,8 @@ public class CompraController {
                 }
 
                 if((menor - estos1.get(uno).getDiasSupli()) > 0){
-                    //TODO: A partir de aqui sacar fecha que debe de pedir, entrarla a la orden, guardarla y presentarla. Repetir para las demas listas de articulos
                     Double diaPorPedir = menor - estos1.get(uno).getDiasSupli();
-                    System.out.println("Dia que ha que pedir: " + diaPorPedir);
+                    System.out.println("Dias par fecha deseada: " + diaPorPedir);
 
                     Date dt = new Date();
                     Calendar c = Calendar.getInstance();
@@ -415,5 +442,6 @@ public class CompraController {
 
         return new Orden(suplidor,total,estos1,fech);
     }
+
 
 }
