@@ -11,14 +11,16 @@ import java.util.Date;
 public class Articulos {
     Double codigoArticulo;
     Double cantidadOrdenada;
-    Date fecDesea;
     Double precioCompra;
+    Double cantExist;
+    Double diasSupli;
 
-    public Articulos(Double codigoArticulo, Double cantidadOrdenada,Date fecDesea, Double precioCompra) {
+    public Articulos(Double codigoArticulo, Double cantidadOrdenada, Double precioCompra, Double cantExist, Double diasSupli) {
         this.codigoArticulo = codigoArticulo;
         this.cantidadOrdenada = cantidadOrdenada;
-        this.fecDesea = fecDesea;
         this.precioCompra = precioCompra;
+        this.cantExist = cantExist;
+        this.diasSupli = diasSupli;
     }
 
     public Articulos() {

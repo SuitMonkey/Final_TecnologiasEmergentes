@@ -14,13 +14,17 @@ public class Target {
     Double cantOrdenada;
     Double precio;
     Date fecOrden;
+    Double cantidadTotal;
+    Double bestSupli;
 
-    public Target(Double codArt,String nomArt, Double cantOrdenada, Double precio, Date fecOrden) {
+    public Target(Double codArt,String nomArt, Double cantOrdenada, Double precio, Date fecOrden, Double cantidadTotal,Double bestSupli) {
         this.codArt = codArt;
         this.nomArt = nomArt;
         this.cantOrdenada = cantOrdenada;
         this.precio = precio;
         this.fecOrden = fecOrden;
+        this.cantidadTotal = cantidadTotal;
+        this.bestSupli = bestSupli;
     }
 
     public Target() {

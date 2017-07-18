@@ -2,6 +2,7 @@ package controllers;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -28,8 +29,6 @@ public class CompraController {
     ObservableList<TablaCompra> data = FXCollections.observableArrayList();
     List<TablaCompra> objetivo = new ArrayList<>();
     List<modelo.Articulo> todosArticulos = new ArrayList<>();
-    Map<String, List<Target>> estosSon = new HashMap<>();
-
 
 
     //Estableciendo conexion con la base de datos
@@ -169,7 +168,7 @@ public class CompraController {
                         if(diasLleguen < dias){
                             System.out.println("Orden no se puede cumplir, pocos dias");
                         }else {
-                            Target target = new Target(codArtt,choose.getArticulo(),Double.parseDouble(objetivo.get(i).getCantidad()),precio,date);
+                            Target target = new Target(codArtt,choose.getArticulo(),Double.parseDouble(objetivo.get(i).getCantidad()),precio,date,todosArticulos.get(k).getCantidadTotal(),dias);
                             if(suplidor.equals("2001")){
                                 sup1.add(target);
                                 total1 += precio*Double.parseDouble(objetivo.get(i).getCantidad());
@@ -191,20 +190,95 @@ public class CompraController {
 
         }
 
-        for(Target t : sup1){
-            Articulos articulos = new Articulos(t.getCodArt(),t.getCantOrdenada(),t.getFecOrden(),t.getPrecio());
-            estos1.add(articulos);
+
+       if(sup1.size() > 0){
+           for(Target t : sup1){
+               Articulos articulos = new Articulos(t.getCodArt(),t.getCantOrdenada(),t.getPrecio(),t.getCantidadTotal(),t.getBestSupli());
+               estos1.add(articulos);
+           }
+       }
+
+        if(sup2.size()>0){
+            for (Target ta : sup2){
+                Articulos arti = new Articulos(ta.getCodArt(), ta.getCantOrdenada(), ta.getPrecio(), ta.getCantidadTotal(), ta.getBestSupli());
+                estos2.add(arti);
+            }
         }
 
-        for (Target ta : sup2){
-            Articulos arti = new Articulos(ta.getCodArt(), ta.getCantOrdenada(), ta.getFecOrden(), ta.getPrecio());
-            estos2.add(arti);
+        if(sup3.size()>0){
+            for (Target tar : sup3){
+                Articulos artic = new Articulos(tar.getCodArt(),tar.getCantOrdenada(),tar.getPrecio(), tar.getCantidadTotal(), tar.getBestSupli());
+                estos3.add(artic);
+            }
         }
 
-        for (Target tar : sup3){
-            Articulos artic = new Articulos(tar.getCodArt(),tar.getCantOrdenada(),tar.getFecOrden(),tar.getPrecio());
-            estos3.add(artic);
+
+
+        MongoCollection<Document> movimientosArticulos = database.getCollection("MovimientoInventario");
+
+        AggregateIterable<Document> movimient = movimientosArticulos.aggregate(Arrays.asList(
+                new Document("$match",new Document("tipoMovimiento","Salida")),
+                new Document("$group",new Document("_id",new Document("codigoArticulo","$codigoArticulo")
+                ).append("count",new Document("$sum",1)).append("cantidad",new Document("$sum","$cantidad")))
+
+        ));
+
+        Date fech1;
+        Date fech2;
+        Date fech3;
+
+        int trap = 0;
+
+        int fin1;
+        int fin2;
+        int fin3;
+
+        Double menor1 = -1.0;
+        Double menor2 = -1.0;
+        Double menor3 = -1.0;
+
+        for(Document as : movimient){
+            Document artis = (Document) as.get("_id");
+            System.out.println("Articulo: " + artis.get("codigoArticulo"));
+            System.out.println("Cantidad total: " + as.get("cantidad"));
+            System.out.println("Total de salidas: " + as.get("count"));
+            trap++;
+
+            if(estos1.size() > 0){
+                for(int uno = 0; uno < estos1.size(); uno++){
+                    if(artis.get("codigoArticulo").equals(estos1.get(uno).getCodigoArticulo())){
+                        Double consumo = Math.floor((Double) as.get("cantidad")/(Double) as.get("count"));
+                        System.out.println("\nconsumo para "+ artis.get("codigoArticulo")+": " + String.valueOf(consumo)+"\n");
+
+                        Double diasFaltantes = Math.floor(estos1.get(uno).getCantExist()/consumo);
+
+                        if(uno == 0){
+                            menor1 = diasFaltantes;
+                        }else {
+                            if(menor1 > diasFaltantes){
+                                menor1 = diasFaltantes;
+                            }
+                        }
+
+                        if((menor1 - estos1.get(uno).getDiasSupli()) > 0){
+                            //TODO: A partir de aqui sacar fecha que debe de pedir, entrarla a la orden, guardarla y presentarla. Repetir para las demas listas de articulos
+                        }
+                    }
+                }
+
+
+
+            }
+
+
+
         }
+        System.out.println("\nCantidad total de todo: " + String.valueOf(trap));
+
+
+
+
+
 
         orden1 = new Orden("2001",total1,estos1);
 
@@ -212,12 +286,14 @@ public class CompraController {
 
         orden3 = new Orden("2003",total3,estos3);
 
+
+
         Document ordenCompra = new Document();
         Document articuloOrden = new Document();
 
         Document ordenesMongo = database.getCollection("OrdenCompra").find().sort(new BasicDBObject("codigoOrdenCompra",-1)).first();
 
-        System.out.println(orden1.getArticulos().get(orden1.getArticulos().size()-1).getFecDesea());
+        System.out.println(orden1.getArticulos().get(orden1.getArticulos().size()-1));
 
 //        if(ordenesMongo == null){
 //            ordenCompra.append("codigoOrdenCompra",1);
